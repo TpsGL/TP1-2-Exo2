@@ -1,8 +1,9 @@
 import 'package:exo2/bootstrap/QuestionModel.dart';
-import 'package:exo2/bootstrap/QuizApp.dart';
+import 'package:exo2/cubit/quiz_cubit.dart';
 import 'package:exo2/fragments/utils/Helper.dart';
 import 'package:exo2/model/Question.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 
 
@@ -10,26 +11,24 @@ void main() {
   runApp(MaterialApp(
     title: 'Programming Culture Quiz',
     debugShowCheckedModeBanner: false,
-    home: StarterApp(),
+    home: MultiBlocProvider(
+      providers: [BlocProvider(create: (_) => QuizCubic(),)],
+      child: QuizFragment() ,
+    )
+
   ));
 }
 
-class StarterApp extends StatelessWidget {
+/*class StarterApp extends StatelessWidget {
   const StarterApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (context) => QuestionModel())
-      ],
+    return MaterialApp(
 
-      child: MaterialApp(
-        routes: {"/": (context) => QuizFragment()},
-      ),
     );
   }
-}
+}*/
 
 class QuizFragment extends StatefulWidget{
   const QuizFragment({Key? key}) : super(key: key);
@@ -43,12 +42,14 @@ class _QuizFragmentState extends State<QuizFragment> {
 
   @override
   Widget build(BuildContext context) {
+    List<Question> questions = QuestionModel().questions;
+
     return Scaffold(
           appBar: AppBar(
               backgroundColor: Colors.blue, title: Text("Programming Culture Quiz")),
           body: SafeArea(
-            child: Consumer<QuestionModel>(
-                builder:(context, value, child) {
+            child: BlocBuilder<QuizCubic, int>(
+                builder:(context, index) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -59,7 +60,7 @@ class _QuizFragmentState extends State<QuizFragment> {
                              padding: const EdgeInsets.all(8.0),
                              child: Container(
                                 color: Colors.white,
-                                  child: Image.asset( value.questions[value.questionIndex].srcImg),
+                                  child: Image.asset(questions[index].srcImg),
                             )
                            )
                         ),
@@ -71,8 +72,7 @@ class _QuizFragmentState extends State<QuizFragment> {
                                   color: Colors.white,
                                 ),
                                 child: Center(
-                                  child: Text(
-                                    value.questions[value.questionIndex].question,
+                                  child: Text( questions[index].question,
                                     style: const TextStyle( fontSize: 20.0),
                                   ),
                                 )
@@ -88,7 +88,7 @@ class _QuizFragmentState extends State<QuizFragment> {
                                       child: ElevatedButton(
                                           onPressed: () {
                                             setState(() {
-                                              if (value.questions[value.questionIndex].isCorrect == true) {
+                                              if (questions[index].isCorrect == true) {
                                                 ScaffoldMessenger.of(context).showSnackBar(Helper().correctAnswer());
                                               } else {
                                                 ScaffoldMessenger.of(context).showSnackBar(Helper().incorrectAnswer());
@@ -101,7 +101,7 @@ class _QuizFragmentState extends State<QuizFragment> {
                                     child: ElevatedButton(
                                         onPressed: () {
                                           setState(() {
-                                            if (value.questions[value.questionIndex].isCorrect == false) {
+                                            if (questions[index].isCorrect == false) {
                                               ScaffoldMessenger.of(context).showSnackBar(Helper().correctAnswer());
                                             } else {
                                               ScaffoldMessenger.of(context).showSnackBar(Helper().incorrectAnswer());
@@ -116,7 +116,7 @@ class _QuizFragmentState extends State<QuizFragment> {
                                   padding: const EdgeInsets.all(5.0),
                                   child: ElevatedButton(
                                       onPressed: () {
-                                        value.updateQuiz();
+                                        context.read<QuizCubic>().checkResponse(false);
                                       },
                                       child: Icon( Icons.arrow_forward)
                                   ),
